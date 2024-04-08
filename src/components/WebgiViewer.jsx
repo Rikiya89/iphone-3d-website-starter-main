@@ -16,7 +16,6 @@ import {
     SSAOPlugin,
     BloomPlugin,
     GammaCorrectionPlugin,
-    mobileAndTabletCheck,
 } from "webgi";
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -29,25 +28,29 @@ const WebgiViewer = forwardRef((props, ref) => {
     const [viewerRef, setupViewerRef] = useState(null);
     const [targetRef, setTargetRef] = useState(null);
     const [cameraRef, setCameraRef] = useState(null);
-    const [positionRef,setPositionRef] = useState(null);
+    const [positionRef, setPositionRef] = useState(null);
+    const canvasContainerRef = useRef(null); // Changed to useRef
 
     useImperativeHandle(ref, () => ({
         triggerPreview() {
-            gsap.to(positionRef, {
+            canvasContainerRef.current.style.pointerEvents = 'all';
+            props.contentRef.current.style.opacity =  "0";
+            gsap.to(positionRef.current, { // Ensure we're using .current
                 x: 13.04,
                 y: -2.01,
                 z: 2.29,
                 duration: 2,
-                onUpdate: () => { // Corrected syntax here
-                    viewerRef.setDirty();
-                    cameraRef.positionTargetUpdated(true);
+                onUpdate: () => {
+                    viewerRef.current.setDirty(); // Ensure we're using .current
+                    cameraRef.current.positionTargetUpdated(true); // Ensure we're using .current
                 }
             });
     
-            gsap.to(targetRef, { x: 0.11, y: 0.0, z: 0.0, duration: 2 });
+            gsap.to(targetRef.current, { x: 0.11, y: 0.0, z: 0.0, duration: 2 }); // Ensure we're using .current
+
+            viewerRef.current.scene.activeCamera.setCameraOptions({ controlsEnabled: true }); // Ensure we're using .current
         }
-    }));
-    
+    }), [canvasContainerRef, props, positionRef, viewerRef, cameraRef, targetRef]); // Updated dependencies
 
     const memorizedScrollAnimation = useCallback(
         (position, target, onUpdate) => {
@@ -62,12 +65,16 @@ const WebgiViewer = forwardRef((props, ref) => {
             canvas: canvasRef.current,
         });
 
-        const manager = await viewer.addPlugin(AssetManagerPlugin);
+        setupViewerRef(viewer);
 
-        // Assuming these are correctly set within the viewer or manager
+        const manager = await viewer.addPlugin(AssetManagerPlugin);
         const camera = viewer.scene.activeCamera;
         const position = camera.position;
         const target = camera.target;
+
+        setCameraRef(camera);
+        setPositionRef(position);
+        setTargetRef(target);
 
         await viewer.addPlugin(GBufferPlugin);
         await viewer.addPlugin(new ProgressivePlugin(32));
@@ -101,16 +108,15 @@ const WebgiViewer = forwardRef((props, ref) => {
             }
         });
 
-        // Call memorizedScrollAnimation within the same scope as position and target
         memorizedScrollAnimation(position, target, onUpdate);
-    }, []);
+    }, [canvasRef]); // Updated dependencies
 
     useEffect(() => {
         setupViewer();
-    }, []);
+    }, [setupViewer]); // Updated dependencies
 
     return (
-        <div id='webgi-canvas-container'>
+        <div id='webgi-canvas-container' ref={canvasContainerRef}>
             <canvas id='webgi-canvas' ref={canvasRef} />
         </div>
     );
