@@ -30,9 +30,11 @@ const WebgiViewer = forwardRef((props, ref) => {
     const [cameraRef, setCameraRef] = useState(null);
     const [positionRef, setPositionRef] = useState(null);
     const canvasContainerRef = useRef(null); // Changed to useRef
+    const [previewMode,setPreviewMode] = useState(false);
 
     useImperativeHandle(ref, () => ({
         triggerPreview() {
+            setPreviewMode(true);
             canvasContainerRef.current.style.pointerEvents = 'all';
             props.contentRef.current.style.opacity =  "0";
             gsap.to(positionRef.current, { // Ensure we're using .current
@@ -41,14 +43,14 @@ const WebgiViewer = forwardRef((props, ref) => {
                 z: 2.29,
                 duration: 2,
                 onUpdate: () => {
-                    viewerRef.current.setDirty(); // Ensure we're using .current
-                    cameraRef.current.positionTargetUpdated(true); // Ensure we're using .current
+                    viewerRef.setDirty(); // Ensure we're using .current
+                    cameraRef.positionTargetUpdated(true); // Ensure we're using . current
                 }
             });
     
-            gsap.to(targetRef.current, { x: 0.11, y: 0.0, z: 0.0, duration: 2 }); // Ensure we're using .current
+            gsap.to(targetRef, { x: 0.11, y: 0.0, z: 0.0, duration: 2 }); // Ensure we're using .current
 
-            viewerRef.current.scene.activeCamera.setCameraOptions({ controlsEnabled: true }); // Ensure we're using .current
+            viewerRef.scene.activeCamera.setCameraOptions({ controlsEnabled: true }); // Ensure we're using .current
         }
     }), [canvasContainerRef, props, positionRef, viewerRef, cameraRef, targetRef]); // Updated dependencies
 
@@ -90,7 +92,7 @@ const WebgiViewer = forwardRef((props, ref) => {
 
         viewer.getPlugin(TonemapPlugin).config.clipBackground = true;
 
-        viewer.scene.activeCamera.setCameraOptions({ controlsEnabled: false });
+        viewer.scene.activeCamera.setCameraOptions({ controlsEnabled: true });
 
         window.scrollTo(0, 0);
 
@@ -115,9 +117,51 @@ const WebgiViewer = forwardRef((props, ref) => {
         setupViewer();
     }, [setupViewer]); // Updated dependencies
 
+    const handleExit = useCallback(() => {
+        canvasContainerRef.current.style.pointerEvents = 'none';
+        props.contentRef.current.style.opacity = '1';
+        viewer.scene.activeCamera.setCameraOptions({ controlsEnabled: true });
+        setPreviewMode(false);
+
+        gsap.to(positionRef, {
+            x: 1.56,
+            y: 5.0,
+            z: 0.01,
+            scrollTrigger: {
+                trigger: '.display-section',
+                start: "top bottom",
+                end: "top top",
+                scrub: 2,
+                immediateRender: false
+            },
+            onUpdate: () => {
+                viewerRef.setDirty();
+                cameraRef.positionTargetUpdated(true);
+            },
+        });
+        
+        gsap.to(targetRef, {
+            x: -0.55,
+            y: 0.32,
+            z: 0.0,
+            scrollTrigger: {
+                trigger: '.display-section',
+                start: "top bottom",
+                end: "top top",
+                scrub: 2,
+                immediateRender: false
+            },
+        });
+    },[canvasContainerRef, viewerRef, positionRef, cameraRef, targetRef]); //
+
     return (
-        <div id='webgi-canvas-container' ref={canvasContainerRef}>
+        <div ref={canvasContainerRef} id='webgi-canvas-container'>
             <canvas id='webgi-canvas' ref={canvasRef} />
+            {
+                previewMode && (
+                    <button className='button' onClick={handleExit}>Exit</button>
+                )
+            }
         </div>
     );
 });
