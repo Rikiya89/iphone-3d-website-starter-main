@@ -22,7 +22,7 @@ function Jumbotron() {
             </span>
             <ul className="links">
                 <li>
-                    <button className="button">Buy</button>
+                    <button className="button"><a href="https://www.apple.com/shop/buy-iphone/iphone-14">Buy</a></button>
                 </li>
                 <li>
                     <a className="link" onClick={handleLearnMore}>Learn more</a> 

@@ -16,6 +16,7 @@ import {
     SSAOPlugin,
     BloomPlugin,
     GammaCorrectionPlugin,
+    mobileAndTabletCheck,
 } from "webgi";
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -25,19 +26,20 @@ gsap.registerPlugin(ScrollTrigger);
 
 const WebgiViewer = forwardRef((props, ref) => {
     const canvasRef = useRef(null);
-    const [viewerRef, setupViewerRef] = useState(null);
+    const [viewerRef, setViewerRef] = useState(null);
     const [targetRef, setTargetRef] = useState(null);
     const [cameraRef, setCameraRef] = useState(null);
     const [positionRef, setPositionRef] = useState(null);
     const canvasContainerRef = useRef(null); // Changed to useRef
     const [previewMode,setPreviewMode] = useState(false);
+    const [isMobile, setIsMobile] = useState(null);
 
     useImperativeHandle(ref, () => ({
         triggerPreview() {
             setPreviewMode(true);
             canvasContainerRef.current.style.pointerEvents = 'all';
             props.contentRef.current.style.opacity =  "0";
-            gsap.to(positionRef.current, { // Ensure we're using .current
+            gsap.to(positionRef, { // Ensure we're using .current
                 x: 13.04,
                 y: -2.01,
                 z: 2.29,
@@ -54,22 +56,23 @@ const WebgiViewer = forwardRef((props, ref) => {
         }
     }), [canvasContainerRef, props, positionRef, viewerRef, cameraRef, targetRef]); // Updated dependencies
 
-    const memorizedScrollAnimation = useCallback(
-        (position, target, onUpdate) => {
-            if (position && target && onUpdate) {
-                scrollAnimation(position, target, onUpdate);
-            }
-        }, []
-    );
+    const memorizedScrollAnimation = useCallback((position, target, isMobile, onUpdate) => {
+        if (position && target && onUpdate) {
+            scrollAnimation(position, target, isMobile, onUpdate);
+        }
+        }, []);
 
     const setupViewer = useCallback(async () => {
         const viewer = new ViewerApp({
             canvas: canvasRef.current,
         });
 
-        setupViewerRef(viewer);
+        setViewerRef(viewer);
+        const isMobileOrTablet = mobileAndTabletCheck();
+        setIsMobile(isMobileOrTablet);
 
         const manager = await viewer.addPlugin(AssetManagerPlugin);
+
         const camera = viewer.scene.activeCamera;
         const position = camera.position;
         const target = camera.target;
@@ -92,7 +95,13 @@ const WebgiViewer = forwardRef((props, ref) => {
 
         viewer.getPlugin(TonemapPlugin).config.clipBackground = true;
 
-        viewer.scene.activeCamera.setCameraOptions({ controlsEnabled: true });
+        viewer.scene.activeCamera.setCameraOptions({ controlsEnabled: false });
+
+        if(isMobileOrTablet) {
+            position.set(-16.7, 1.17, 11.7);
+            target.set(0, 1.37, 0);
+            props.contentRef.current.className = "mobile-or-tablet";
+        }
 
         window.scrollTo(0, 0);
 
@@ -110,44 +119,44 @@ const WebgiViewer = forwardRef((props, ref) => {
             }
         });
 
-        memorizedScrollAnimation(position, target, onUpdate);
-    }, [canvasRef]); // Updated dependencies
+        memorizedScrollAnimation(position, target, isMobileOrTablet, onUpdate);
+    }, []); // Updated dependencies
 
     useEffect(() => {
         setupViewer();
-    }, [setupViewer]); // Updated dependencies
+    }, []); // Updated dependencies
 
     const handleExit = useCallback(() => {
         canvasContainerRef.current.style.pointerEvents = 'none';
         props.contentRef.current.style.opacity = '1';
-        viewer.scene.activeCamera.setCameraOptions({ controlsEnabled: true });
+        viewerRef.scene.activeCamera.setCameraOptions({ controlsEnabled: false });
         setPreviewMode(false);
 
-        gsap.to(positionRef, {
-            x: 1.56,
-            y: 5.0,
-            z: 0.01,
+        gsap.to(positionRef,{
+            x: !isMobile ? 1.56 : 9.36,
+            y: !isMobile ? 5.0 : 10.95,
+            z: !isMobile ? 0.01 : 0.09,
             scrollTrigger: {
                 trigger: '.display-section',
-                start: "top bottom",
-                end: "top top",
+                start: 'top bottom',
+                end: 'top top',
                 scrub: 2,
                 immediateRender: false
             },
-            onUpdate: () => {
+            onUpdate:() => {
                 viewerRef.setDirty();
                 cameraRef.positionTargetUpdated(true);
             },
         });
         
-        gsap.to(targetRef, {
-            x: -0.55,
-            y: 0.32,
-            z: 0.0,
+        gsap.to(targetRef,{
+            x: !isMobile ? -0.55 : -1.62,
+            y: !isMobile ? 0.32 : 0.02,
+            z: !isMobile ? 0.0 : -0.06,
             scrollTrigger: {
                 trigger: '.display-section',
-                start: "top bottom",
-                end: "top top",
+                start: 'top bottom',
+                end: 'top top',
                 scrub: 2,
                 immediateRender: false
             },
