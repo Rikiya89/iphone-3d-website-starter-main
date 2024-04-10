@@ -243,7 +243,6 @@ nav .link-styled {
 
 .jumbotron-section .button {
   background: #0071e3;
-  color: #fff;
   cursor: pointer;
   display: inline-block;
   text-align: center;
@@ -254,6 +253,11 @@ nav .link-styled {
   padding: 8px 16px;
   border-radius: 980px;
   margin: 0 14px;
+}
+
+.jumbotron-section .button a {
+  text-decoration: none;
+  color: #fff;
 }
 
 .jumbotron-section .link {
@@ -388,6 +392,11 @@ nav .link-styled {
   border-radius: 980px;
   margin: 0 14px;
   border: none;
+}
+
+.sound-section .button a {
+  text-decoration: none;
+  color: #fff;
 }
 
 .sound-section .link {
