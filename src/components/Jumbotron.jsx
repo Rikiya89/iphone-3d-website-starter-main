@@ -3,14 +3,19 @@ import Iphone from "../assets/images/iphone-14.jpg";
 import HoldingIphone from "../assets/images/iphone-hand.png";
 function Jumbotron() {
 
-    const handleLearnMore = () => { 
-        const element = document.querySelector(".sound-section");
+    const handleLearnMore = (event) => {
+        event.preventDefault();
+        const element = document.getElementById("sound-section");
+        if (!element) {
+            return;
+        }
+        const top = element.getBoundingClientRect().top + window.scrollY;
         window.scrollTo({
-            top: element?.getBoundingClientRect().top,
+            top,
             left: 0,
-            behavior: 'smooth'
+            behavior: "smooth",
         });
-    }
+    };
 
     return (
         <div className="jumbotron-section wrapper">
@@ -22,10 +27,10 @@ function Jumbotron() {
             </span>
             <ul className="links">
                 <li>
-                    <button className="button"><a href="https://www.apple.com/shop/buy-iphone/iphone-14">Buy</a></button>
+                    <a className="button" href="https://www.apple.com/shop/buy-iphone/iphone-14">Buy</a>
                 </li>
                 <li>
-                    <a className="link" onClick={handleLearnMore}>Learn more</a> 
+                    <a className="link" href="#sound-section" onClick={handleLearnMore}>Learn more</a>
                 </li>
             </ul> 
             <img className="iphone-img" src={HoldingIphone} alt="iPhone"/>

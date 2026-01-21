@@ -2,31 +2,35 @@ import React from 'react';
 
 function SoundSection() {
 
-    const handleLearnMore = () => {
-
-        const element = document.querySelector('.display-section');
-        window.scroll({
-            top: element?.getBoundingClientRect().bottom,
+    const handleLearnMore = (event) => {
+        event.preventDefault();
+        const element = document.getElementById("display-section");
+        if (!element) {
+            return;
+        }
+        const top = element.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({
+            top,
             left: 0,
-            behavior: "smooth"
-        })
-    }
+            behavior: "smooth",
+        });
+    };
 
     return (
-        <div className='sound-section wrapper'>
+        <div className='sound-section wrapper' id="sound-section">
             <div className='body'>
                 <div className='sound-section-content content'>
-                        <h2 className='tittle'>New Sound System</h2>
+                        <h2 className='title'>New Sound System</h2>
                         <p className='text'>Feel the base.</p>
                         <span className='description'>
                             From $41.62/mo.for 24 mo. or $999 before trade-in
                         </span>
                         <ul className='links'>
                             <li>
-                            <button className="button"><a href="https://www.apple.com/shop/buy-iphone/iphone-14">Buy</a></button>
+                            <a className="button" href="https://www.apple.com/shop/buy-iphone/iphone-14">Buy</a>
                             </li>
                             <li> 
-                                <a className='link' onClick={handleLearnMore}>Learn more</a>
+                                <a className='link' href="#display-section" onClick={handleLearnMore}>Learn more</a>
                             </li>
                         </ul>
                 </div>
